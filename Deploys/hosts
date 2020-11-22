@@ -1,0 +1,6 @@
+[all:vars]
+numero_gmud = "2"
+numero_version = "v1.0.0.1"
+[webservers]
+SRV02 ansible_host=172.31.39.223 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/scripts/ansible-poc-02.pem #SRV02
+SRV01 ansible_host=172.31.47.17 ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/scripts/ansible-poc-02.pem #SRV01
