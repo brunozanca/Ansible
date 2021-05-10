@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+
+  - name: Start service wildfly, if not started
+    service:
+      name: wildfly
+      state: started

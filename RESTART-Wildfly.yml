@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+
+  - name: Stop service httpd, if started
+    service:
+      name: wildfly
+      state: stopped
+  - name: Start service httpd, if not started
+    service:
+      name: wildfly
+      state: started
+  - name: Find /var/log all directories
+    find:
+      paths: /opt/wildfly/standalone/deployments

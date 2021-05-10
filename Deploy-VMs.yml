@@ -1,0 +1,134 @@
+---
+
+- hosts: 172.20.21.18,172.20.21.19,172.20.21.20,172.20.21.21
+  tasks:
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/ET/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/ET/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr     
+     mode: '0775'
+
+  - name: Realizando Deploy dos arquivos das ETS
+    shell: cp /home/gmuds/{{numero_gmud}}/delivery/*.ear /opt/wildfly/standalone/deployments/
+
+
+- hosts: 172.20.21.2,172.20.21.3
+  tasks:
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/BATCH/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/BATCH/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr     
+     mode: '0775'
+
+  - name: Realizando Deploy dos arquivos das BATCHS
+    shell: cp /home/gmuds/{{numero_gmud}}/delivery/*.ear /opt/wildfly/standalone/deployments/
+
+- hosts: 172.20.21.98,172.20.21.99
+  tasks:
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/IS/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/IS/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr     
+     mode: '0775'          
+
+  - name: Realizando Deploy dos arquivos das IS
+    shell: cp /home/gmuds/{{numero_gmud}}/delivery/*.ear /opt/wildfly/standalone/deployments/
+
+
+- hosts: 172.20.21.50,172.20.21.51
+  tasks:
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/VN/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/VN/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr     
+     mode: '0775'               
+
+
+  - name: Realizando Deploy dos arquivos das VNS
+    shell: cp /home/gmuds/{{numero_gmud}}/delivery/*.ear /opt/wildfly/standalone/deployments/
+
+- hosts: 172.20.21.82,172.20.21.83
+  tasks:
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/MDES/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/MDES/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr     
+     mode: '0775'      
+     
+  - name: Realizando Deploy dos arquivos dos MDES
+    shell: cp /home/gmuds/{{numero_gmud}}/delivery/*.ear /opt/wildfly/standalone/deployments/
+
+- hosts: 172.20.21.66, 172.20.21.67, 172.20.21.68, 172.20.21.69
+  tasks:
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/ADMIN/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/ADMIN/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr     
+     mode: '0775' 
+
+  - name: Realizando Deploy dos arquivos dos ADMINs
+    shell: cp /home/gmuds/{{numero_gmud}}/delivery/*.ear /opt/wildfly/standalone/deployments/
+
+- hosts: all
+  vars:
+    pasta_log: server_logVMs
+  tasks:
+
+  - name: Create a directory /home/{{ansible_user}}/SERVERLOG/
+    file:
+     path: /home/{{ansible_user}}/SERVERLOG
+     state: directory
+     group: operationsgr     
+     mode: '0775'  
+
+  - name: Copiando arquivos do /opt/wildfly/standalone/log/server.log/ para /home/{{ansible_user}}/
+    fetch:
+     src: /opt/wildfly/standalone/log/server.log
+     dest: /home/{{ansible_user}}/SERVERLOG/{{ansible_hostname}}-server.log
+     flat: yes
+     group: operationsgr    
+     mode: '0775'
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: "Atribuir permissao na pasta"
+    file: dest=/home/{{ansible_user}}/SERVERLOG/  mode=0775 group=operationsgr recurse=yes   
+
+- hosts: all
+  tasks:
+  - name: Ansible shell module output
+    shell: ls -la /opt/wildfly/standalone/deployments
+    register: command_result
+
+  - name: Ansible shell register result
+    debug: msg="{{ command_result }}"
+
+  - name: Return only the shell standard output
+    debug: msg="{{ command_result.stdout_lines }}"
+
+  - name: Ansible shell SHA1SUM output
+    shell: sha1sum /opt/wildfly/standalone/deployments/*
+    register: command_result_002
+
+  - name: Ansible shell register result
+    debug: msg="{{ command_result_002 }}"
+
+  - name: Return only the shell standard output
+    debug: msg="{{ command_result_002.stdout_lines}}"
+
+  - name: Ansible shell Status wildfly
+    shell: systemctl status wildfly
+    register: command_result_003
+
+  - name: Ansible shell register result
+    debug: msg="{{ command_result_003 }}"
+
+  - name: Return only the shell standard output
+    debug: msg="{{ command_result_003.stdout_lines}}" 

@@ -1,0 +1,48 @@
+---
+
+- hosts: all
+  tasks:
+  - name: Stop service httpd, if started
+    service:
+      name: wildfly
+      state: stopped 
+
+  - name: Realizando RollBack dos arquivos .EARS das ETS
+    shell: cp /home/gmuds/{{numero_gmud}}/backup/wildfly/*.ear /opt/wildfly/standalone/deployments/
+
+  - name: Start service httpd, if not started
+    service:
+      name: wildfly
+      state: started    
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Removendo arquivos antigos
+    file:
+     path: /home/{{ansible_user}}/SERVERLOG
+     state: absent
+
+  - name: Create a directory in local server /home/user/serverlog/
+    file:
+     mode: 0775
+     path: /home/{{ansible_user}}/SERVERLOG
+     state: directory
+
+- hosts: all
+  vars:
+    pasta_log: server_logVMs
+  tasks:
+
+  - name: Copiando arquivos do /opt/wildfly/standalone/log/server.log/ para /home/{{ansible_user}}/
+    fetch:
+     src: /opt/wildfly/standalone/log/server.log
+     dest: /home/{{ansible_user}}/SERVERLOG/{{ansible_hostname}}-server.log
+     flat: yes
+     mode: '0775'
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: "Atribuir permissao na pasta"
+    file: dest=/home/{{ansible_user}}/SERVERLOG/  mode=0775 recurse=yes    

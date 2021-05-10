@@ -1,0 +1,26 @@
+---
+- hosts: all
+  vars:
+    numero_gmud: "GMUD33922"
+  tasks:
+  - name: Create a directory /home/gmuds
+    file:
+     path: /home/gmuds
+     state: directory
+     mode: '0775'
+  - name: Create a directory /home/gmuds/gmud_xx
+    file:
+     path: /home/gmuds/{{numero_gmud}}
+     state: directory
+     mode: '0775'
+  - name: Create a directory /home/gmuds/gmud_xx/delivery
+    file:
+     path: /home/gmuds/{{numero_gmud}}/delivery
+     state: directory
+     mode: '0775'
+  - name: Create a directory /home/gmuds/gmud_xx/backup
+    file:
+     path: /home/gmuds/{{numero_gmud}}/backup
+     state: directory
+     mode: '0775'
+~                  

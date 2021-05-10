@@ -1,0 +1,13 @@
+---
+- hosts: all
+  tasks:
+  - name: Ansible shell Status wildfly
+    shell: systemctl status wildfly
+    register: command_result_002
+
+  - name: Ansible shell register result
+    debug: msg="{{ command_result_002 }}"
+
+  - name: Return only the shell standard output
+    debug: msg="{{ command_result_002.stdout_lines}}"
+
