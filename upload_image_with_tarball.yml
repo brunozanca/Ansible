@@ -1,0 +1,115 @@
+---
+- hosts: all
+  tasks:
+  - name: Create a directory /home/gmuds
+    file:
+     path: /home/gmuds
+     state: directory
+     group: operationsgr
+     mode: '0775'
+  - name: Create a directory /home/gmuds/{{numero_gmud}}
+    file:
+     path: /home/gmuds/{{numero_gmud}}
+     state: directory
+     group: operationsgr
+     mode: '0775'
+  - name: Create a directory /home/gmuds/{{numero_gmud}}/delivery
+    file:
+     path: /home/gmuds/{{numero_gmud}}/delivery
+     state: directory
+     group: operationsgr
+     mode: '0775'
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Create a directory /home/{{ansible_user}}/gmuds/
+    file:
+     path: /home/{{ansible_user}}/gmuds
+     state: directory
+     group: operationsgr
+     mode: '0775'
+  - name: Create a directory /home/{{ansible_user}}/gmuds/
+    file:
+     path: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/delivery
+     state: directory
+     group: operationsgr
+     mode: '0775'     
+  - name: Add permissions
+    file: path=/home/{{ansible_user}}/gmuds/{{numero_gmud}}/delivery mode=0775 state=directory recurse=yes     
+  - pause:
+      prompt: "Coloque o arquivo de Delivery na pasta e digite OK quando terminar"
+
+- hosts: all
+  vars:
+    services_version:
+    - name: service01
+    - name: service02
+    - name: service03
+    - name: service04
+    - name: service05
+
+
+  tasks:
+  - name: Add permissions
+    file: path=/home/{{ansible_user}}/gmuds/{{numero_gmud}}/delivery mode=0775 state=directory recurse=yes
+  - name: Copiando arquivos do /home/{{ansible_user}}/gmuds/{{numero_gmud}}/delivery/ para /home/gmuds/{{numero_gmud}}/delivery/
+    copy:
+     src: /home/{{ansible_user}}/gmuds/{{numero_gmud}}/delivery/
+     dest: /home/gmuds/{{numero_gmud}}/delivery/
+     group: operationsgr
+     mode: '0775'
+	 
+  - name: Get name tar /home/gmuds/{{numero_gmud}}/delivery/SERVICES
+    shell: "ls /home/gmuds/{{numero_gmud}}/delivery/{{ item.name }}-*"
+    with_items: "{{ services_version }}"
+    register:  echo_out
+    ignore_errors: True
+    no_log: true
+	
+  - name: Create a directory /home/gmuds/{{numero_gmud}}/delivery/SERVICES
+    file:
+     path: "/home/gmuds/{{numero_gmud}}/delivery/tmp_{{ item.name }}"
+     state: directory
+     group: operationsgr
+     mode: '0775'  
+    with_items: "{{ services_version }}"
+    no_log: true
+    ignore_errors: True
+	
+  - name: Descompactando o serviço item.item.name
+    unarchive:
+      remote_src: yes
+      src: "{{ item.stdout }}"
+      dest: "/home/gmuds/{{numero_gmud}}/delivery/tmp_{{ item.item.name }}"
+      mode: '0775'
+      group: operationsgr
+    with_items:
+      - "{{ echo_out.results }}"
+    ignore_errors: True
+	
+  - name: Get version Services
+    shell: "cat /home/gmuds/{{numero_gmud}}/delivery/tmp_{{item.name}}/version.txt"
+    with_items: "{{ services_version }}"
+    register:  echo_version
+    ignore_errors: True
+    no_log: true
+	
+  - name: Create Image Docker para os serviços
+    command: docker image build --no-cache -t {{item.stdout}} /home/gmuds/{{numero_gmud}}/delivery/tmp_{{item.item.name}}/
+    with_items: "{{ echo_version.results }}"
+    ignore_errors: True
+    no_log: true
+	
+  - name: Get Sha1 Services
+    shell: "cat /home/gmuds/{{numero_gmud}}/delivery/tmp_{{item.name}}/sha1.txt"
+    with_items: "{{ services_version }}"
+    register:  echo_sha1
+    ignore_errors: True
+    no_log: true
+	
+  - name: print SHA1 - Services
+    debug: msg="{{ item.stdout }}"
+    with_items: "{{ echo_sha1.results }}"
+    ignore_errors: True
+    when: item.stdout != ""
